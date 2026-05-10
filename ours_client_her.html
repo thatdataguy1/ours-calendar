@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ours</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F5F0;
+    --surface: #FFFFFF;
+    --border: #E8E4DC;
+    --text: #1A1814;
+    --muted: #8C8880;
+    --him: #C9D4F5;
+    --him-text: #2D3D8F;
+    --her: #F5C9D4;
+    --her-text: #8F2D45;
+    --both: #C9F5E8;
+    --both-text: #1A6B4A;
+    --accent: #1A1814;
+    --radius: 12px;
+    --radius-sm: 7px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 28px 24px;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 30px;
+    font-weight: 400;
+    letter-spacing: -0.3px;
+  }
+
+  .top-right { display: flex; align-items: center; gap: 10px; }
+
+  .nav-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    width: 30px; height: 30px;
+    font-size: 16px;
+    cursor: pointer;
+    color: var(--text);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.12s;
+  }
+  .nav-btn:hover { background: var(--border); }
+
+  .month-pill {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    min-width: 110px;
+    text-align: center;
+  }
+
+  .btn-add {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 999px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-add:hover { opacity: 0.8; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 290px;
+    gap: 18px;
+    align-items: stretch;
+  }
+
+  .cal-wrap {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .day-labels {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    padding: 10px 10px 4px;
+  }
+  .day-label {
+    text-align: center;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .cal-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 2px;
+    padding: 4px 8px 10px;
+  }
+
+  .cal-cell {
+    border-radius: 6px;
+    padding: 5px 4px 4px;
+    cursor: pointer;
+    transition: background 0.1s;
+    border: 1px solid transparent;
+  }
+  .cal-cell:hover { background: #F0EDE6; }
+  .cal-cell.other { opacity: 0.3; pointer-events: none; }
+  .cal-cell.today { border-color: var(--text); }
+  .cal-cell.selected { background: #EEEAE0; }
+
+  .day-num {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    margin-bottom: 3px;
+  }
+  .cal-cell.today .day-num { background: var(--accent); color: var(--bg); }
+
+  .pill {
+    font-size: 9px;
+    font-weight: 500;
+    padding: 2px 4px;
+    border-radius: 3px;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+  }
+  .pill-him  { background: var(--him);  color: var(--him-text); }
+  .pill-her  { background: var(--her);  color: var(--her-text); }
+  .pill-both { background: var(--both); color: var(--both-text); }
+  .pill-more { font-size: 9px; color: var(--muted); padding: 1px 3px; }
+
+  .legend {
+    display: flex;
+    gap: 14px;
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+  .legend-dot  { width: 8px; height: 8px; border-radius: 2px; }
+
+  /* Right panel */
+  .panel {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 18px 16px 22px;
+    overflow-y: auto;
+  }
+
+  .panel-date {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    font-weight: 400;
+    margin-bottom: 14px;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .no-events { font-size: 12px; color: var(--muted); font-style: italic; padding: 4px 0 8px; }
+
+  .ev-card {
+    border-radius: 7px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: opacity 0.1s;
+  }
+  .ev-card:hover { opacity: 0.75; }
+  .ev-card.him-card  { background: var(--him); }
+  .ev-card.her-card  { background: var(--her); }
+  .ev-card.both-card { background: var(--both); }
+
+  .ev-title { font-size: 12px; font-weight: 500; margin-bottom: 1px; }
+  .him-card  .ev-title { color: var(--him-text); }
+  .her-card  .ev-title { color: var(--her-text); }
+  .both-card .ev-title { color: var(--both-text); }
+
+  .ev-meta { font-size: 10px; opacity: 0.7; }
+  .him-card  .ev-meta { color: var(--him-text); }
+  .her-card  .ev-meta { color: var(--her-text); }
+  .both-card .ev-meta { color: var(--both-text); }
+
+  .divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+  .form-title {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .field { margin-bottom: 10px; }
+
+  .field label {
+    display: block;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .field input,
+  .field textarea,
+  .field select {
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    outline: none;
+    transition: border-color 0.12s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .field input:focus,
+  .field textarea:focus,
+  .field select:focus { border-color: var(--text); }
+  .field textarea { resize: none; height: 50px; }
+
+  /* Custom select arrow */
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238C8880' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 9px center;
+    padding-right: 26px;
+    cursor: pointer;
+  }
+
+  .time-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+
+  .who-row { display: flex; gap: 7px; }
+  .who-chip {
+    flex: 1;
+    text-align: center;
+    padding: 7px 0;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.12s;
+    opacity: 0.35;
+  }
+  .who-chip.active { opacity: 1; }
+  .chip-him { background: var(--him); color: var(--him-text); }
+  .chip-him.active { border-color: var(--him-text); }
+  .chip-her { background: var(--her); color: var(--her-text); }
+  .chip-her.active { border-color: var(--her-text); }
+
+  .form-footer { display: flex; gap: 7px; margin-top: 12px; }
+
+  .btn-cancel {
+    flex: 1;
+    padding: 8px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .btn-cancel:hover { background: var(--bg); }
+
+  .btn-save {
+    flex: 2;
+    padding: 8px;
+    background: var(--accent);
+    border: none;
+    border-radius: 999px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    color: var(--bg);
+    cursor: pointer;
+    transition: opacity 0.12s;
+  }
+  .btn-save:hover { opacity: 0.8; }
+
+  .btn-delete {
+    padding: 8px 11px;
+    background: none;
+    border: 1px solid var(--her);
+    border-radius: 999px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--her-text);
+    cursor: pointer;
+  }
+  .btn-delete:hover { background: #FDF0F3; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="title">Ours</div>
+  <div class="top-right">
+    <button class="nav-btn" onclick="changeMonth(-1)">&#8249;</button>
+    <span class="month-pill" id="month-pill"></span>
+    <button class="nav-btn" onclick="changeMonth(1)">&#8250;</button>
+    <button class="btn-add" onclick="newEvent()">+ Event</button>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="cal-wrap">
+    <div class="day-labels">
+      <div class="day-label">Sun</div><div class="day-label">Mon</div><div class="day-label">Tue</div>
+      <div class="day-label">Wed</div><div class="day-label">Thu</div><div class="day-label">Fri</div><div class="day-label">Sat</div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--him)"></div> Him</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--her)"></div> Her</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--both)"></div> Together</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-date" id="panel-date"></div>
+    <div id="day-events"></div>
+    <div class="divider"></div>
+    <div class="form-title" id="form-title">New event</div>
+
+    <div class="field">
+      <label>What</label>
+      <input type="text" id="f-title" placeholder="Climb gym, doctor, dinner...">
+    </div>
+
+    <div class="field">
+      <label>Date</label>
+      <input type="date" id="f-date">
+    </div>
+
+    <div class="field">
+      <label>Time</label>
+      <div class="time-row">
+        <select id="f-hour"><option value="">Hour</option></select>
+        <select id="f-min">
+          <option value="">Min</option>
+          <option value="00">: 00</option>
+          <option value="15">: 15</option>
+          <option value="30">: 30</option>
+          <option value="45">: 45</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Where</label>
+      <input type="text" id="f-place" placeholder="Altitude gym, Sick Kids...">
+    </div>
+
+    <div class="field">
+      <label>Who</label>
+      <div class="who-row">
+        <div class="who-chip chip-him active" id="chip-him" onclick="toggleWho('him')">Him</div>
+        <div class="who-chip chip-her" id="chip-her" onclick="toggleWho('her')">Her</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="f-notes" placeholder="Car not available, bring health card..."></textarea>
+    </div>
+
+    <div class="form-footer">
+      <button class="btn-cancel" onclick="clearForm()">Clear</button>
+      <button class="btn-delete" id="btn-delete" style="display:none" onclick="deleteEvent()">Delete</button>
+      <button class="btn-save" onclick="saveEvent()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const USER_TOKEN = "her-token-xyz789";
+const API_URL = "http://127.0.0.1:8000";
+
+let cur = new Date();
+cur = new Date(cur.getFullYear(), cur.getMonth(), 1);
+
+let selectedDate = fmtDate(new Date());
+let who = { him: true, her: false };
+let editingId = null;
+let events = [];
+
+// Build hour select
+const hourSel = document.getElementById('f-hour');
+for (let h = 0; h < 24; h++) {
+  const label = h === 0 ? '12 AM' : h < 12 ? h + ' AM' : h === 12 ? '12 PM' : (h - 12) + ' PM';
+  const o = document.createElement('option');
+  o.value = String(h).padStart(2, '0');
+  o.textContent = label;
+  hourSel.appendChild(o);
+}
+
+async function loadEventsFromAPI() {
+  const res = await fetch(`${API_URL}/events`, {
+    headers: { 'X-User-Token': USER_TOKEN }
+  });
+  events = await res.json();
+  renderCal();
+  renderPanel();
+}
+
+async function saveEventToAPI(ev) {
+  await fetch(`${API_URL}/events`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Token': USER_TOKEN
+    },
+    body: JSON.stringify(ev)
+  });
+}
+
+async function updateEventToAPI(ev) {
+  await fetch(`${API_URL}/events/${ev.id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Token': USER_TOKEN
+    },
+    body: JSON.stringify(ev)
+  });
+}
+
+async function deleteEventFromAPI(id) {
+  await fetch(`${API_URL}/events/${id}`, {
+    method: 'DELETE',
+    headers: { 'X-User-Token': USER_TOKEN }
+  });
+}
+
+function fmtDate(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function fmtDisplay(ds) {
+  const [y, m, d] = ds.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  return DAYS[dt.getDay()] + ', ' + MONTHS[m-1] + ' ' + d;
+}
+
+function fmtTime(t) {
+  if (!t || !t.includes(':')) return '';
+  const [hh, mm] = t.split(':').map(Number);
+  const h = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
+  return h + ':' + String(mm).padStart(2,'0') + (hh < 12 ? ' AM' : ' PM');
+}
+
+function renderCal() {
+  const y = cur.getFullYear(), m = cur.getMonth();
+  document.getElementById('month-pill').textContent = MONTHS[m] + ' ' + y;
+
+  const first = new Date(y, m, 1).getDay();
+  const days  = new Date(y, m+1, 0).getDate();
+  const todayStr = fmtDate(new Date());
+  let html = '';
+
+  for (let i = 0; i < first; i++) {
+    const d = new Date(y, m, -(first-1-i));
+    html += buildCell(d, true, todayStr);
+  }
+  for (let d = 1; d <= days; d++) {
+    html += buildCell(new Date(y, m, d), false, todayStr);
+  }
+  const rem = (7 - (first + days) % 7) % 7;
+  for (let i = 1; i <= rem; i++) {
+    html += buildCell(new Date(y, m+1, i), true, todayStr);
+  }
+  document.getElementById('cal-grid').innerHTML = html;
+}
+
+function buildCell(d, other, todayStr) {
+  const ds = fmtDate(d);
+  const classes = ['cal-cell', other ? 'other' : '', ds === todayStr ? 'today' : '', ds === selectedDate ? 'selected' : ''].filter(Boolean).join(' ');
+  const dayEvts = events.filter(e => e.date === ds).sort((a,b) => (a.time||'').localeCompare(b.time||''));
+  let pills = dayEvts.slice(0, 2).map(e => {
+    const c = e.who === 'both' ? 'pill-both' : e.who === 'her' ? 'pill-her' : 'pill-him';
+    return `<div class="pill ${c}">${e.time ? e.time.slice(0,5)+' ' : ''}${e.title}</div>`;
+  }).join('');
+  if (dayEvts.length > 2) pills += `<div class="pill-more">+${dayEvts.length-2}</div>`;
+  return `<div class="${classes}" onclick="selectDay('${ds}')"><div class="day-num">${d.getDate()}</div>${pills}</div>`;
+}
+
+function selectDay(ds) {
+  selectedDate = ds;
+  document.getElementById('f-date').value = ds;
+  renderCal();
+  renderPanel();
+}
+
+function renderPanel() {
+  document.getElementById('panel-date').textContent = fmtDisplay(selectedDate);
+  const dayEvts = events.filter(e => e.date === selectedDate).sort((a,b) => (a.time||'').localeCompare(b.time||''));
+  const el = document.getElementById('day-events');
+  if (!dayEvts.length) {
+    el.innerHTML = '<div class="no-events">Nothing planned.</div>';
+    return;
+  }
+  el.innerHTML = dayEvts.map(e => {
+    const c = e.who === 'both' ? 'both-card' : e.who === 'her' ? 'her-card' : 'him-card';
+    const meta = [e.time ? fmtTime(e.time) : '', e.place].filter(Boolean).join(' · ');
+    return `<div class="ev-card ${c}" onclick="editEvent(${e.id})">
+      <div class="ev-title">${e.title}</div>
+      ${meta ? `<div class="ev-meta">${meta}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function changeMonth(dir) {
+  cur = new Date(cur.getFullYear(), cur.getMonth() + dir, 1);
+  renderCal();
+}
+
+function newEvent() {
+  editingId = null;
+  document.getElementById('form-title').textContent = 'New event';
+  document.getElementById('f-title').value = '';
+  document.getElementById('f-date').value = selectedDate;
+  document.getElementById('f-hour').value = '';
+  document.getElementById('f-min').value = '';
+  document.getElementById('f-place').value = '';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('btn-delete').style.display = 'none';
+  who = { him: true, her: false };
+  updateChips();
+}
+
+function clearForm() { newEvent(); }
+
+function editEvent(id) {
+  const e = events.find(x => x.id === id);
+  if (!e) return;
+  editingId = id;
+  document.getElementById('form-title').textContent = 'Edit event';
+  document.getElementById('f-title').value = e.title;
+  document.getElementById('f-date').value = e.date;
+  const parts = (e.time || '').split(':');
+  document.getElementById('f-hour').value = parts[0] || '';
+  document.getElementById('f-min').value  = parts[1] || '';
+  document.getElementById('f-place').value = e.place || '';
+  document.getElementById('f-notes').value = e.notes || '';
+  document.getElementById('btn-delete').style.display = 'inline-block';
+  who = { him: e.who === 'him' || e.who === 'both', her: e.who === 'her' || e.who === 'both' };
+  updateChips();
+}
+
+function toggleWho(w) {
+  who[w] = !who[w];
+  if (!who.him && !who.her) who[w] = true;
+  updateChips();
+}
+
+function updateChips() {
+  document.getElementById('chip-him').classList.toggle('active', who.him);
+  document.getElementById('chip-her').classList.toggle('active', who.her);
+}
+
+async function saveEvent() {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { document.getElementById('f-title').focus(); return; }
+  const h  = document.getElementById('f-hour').value;
+  const mi = document.getElementById('f-min').value;
+  const ev = {
+    id:    editingId || Date.now(),
+    title,
+    date:  document.getElementById('f-date').value,
+    time:  (h && mi) ? h + ':' + mi : '',
+    place: document.getElementById('f-place').value.trim(),
+    notes: document.getElementById('f-notes').value.trim(),
+    who:   (who.him && who.her) ? 'both' : who.her ? 'her' : 'him',
+    author: 'him'
+  };
+  
+  if (editingId) {
+    await updateEventToAPI(ev);
+  } else {
+    await saveEventToAPI(ev);
+  }
+  
+  await loadEventsFromAPI();
+  clearForm();
+}
+
+async function deleteEvent() {
+  if (!editingId) return;
+  await deleteEventFromAPI(editingId);
+  await loadEventsFromAPI();
+  clearForm();
+}
+
+loadEventsFromAPI().then(() => selectDay(fmtDate(new Date())));
+</script>
+
+<footer style="text-align:center;padding:32px 0 16px;font-size:11px;color:var(--muted);letter-spacing:0.04em;">
+  &copy; <span id="yr"></span> Ahmad Qureshi &mdash; Ours
+</footer>
+
+<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+</body>
+</html>

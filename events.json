@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1715380800000,
+    "title": "Test event",
+    "date": "2026-05-16",
+    "time": "14:00",
+    "place": "Home",
+    "notes": "Testing API",
+    "who": "him",
+    "author": "him"
+  },
+  {
+    "id": 1715380800000,
+    "title": "Main Game",
+    "date": "2026-05-16",
+    "time": "16:00",
+    "place": "Home",
+    "notes": "Testing API",
+    "who": "her",
+    "author": "him"
+  },
+  {
+    "id": 1715380800000,
+    "title": "Main Game 2",
+    "date": "2026-05-18",
+    "time": "16:00",
+    "place": "There",
+    "notes": "Testing API",
+    "who": "him",
+    "author": "him"
+  },
+  {
+    "id": 1778448778574,
+    "title": "s",
+    "date": "2026-05-22",
+    "time": "02:30",
+    "place": "ss",
+    "notes": "",
+    "who": "him",
+    "author": "her"
+  },
+  {
+    "id": 1778448795373,
+    "title": "as",
+    "date": "2026-05-21",
+    "time": "00:15",
+    "place": "asas",
+    "notes": "",
+    "who": "both",
+    "author": "her"
+  }
+]
