@@ -47,6 +47,14 @@
     letter-spacing: -0.3px;
   }
 
+  .quote {
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+    margin-top: 4px;
+    max-width: 400px;
+  }
+
   .top-right { display: flex; align-items: center; gap: 10px; }
 
   .nav-btn {
@@ -459,7 +467,10 @@
 <body>
 
 <div class="topbar">
-  <div class="title">Ours</div>
+  <div>
+    <div class="title">Ours</div>
+    <div class="quote" id="quote"></div>
+  </div>
   <div class="top-right">
     <button class="nav-btn" onclick="changeMonth(-1)">&#8249;</button>
     <span class="month-pill" id="month-pill"></span>
@@ -503,8 +514,7 @@
       <div class="time-row">
         <select id="f-hour"><option value="">Hour</option></select>
         <select id="f-min">
-          <option value="">Min</option>
-          <option value="00">: 00</option>
+          <option value="00" selected>: 00</option>
           <option value="15">: 15</option>
           <option value="30">: 30</option>
           <option value="45">: 45</option>
@@ -517,8 +527,7 @@
       <div class="time-row">
         <select id="f-end-hour"><option value="">Hour</option></select>
         <select id="f-end-min">
-          <option value="">Min</option>
-          <option value="00">: 00</option>
+          <option value="00" selected>: 00</option>
           <option value="15">: 15</option>
           <option value="30">: 30</option>
           <option value="45">: 45</option>
@@ -540,6 +549,16 @@
     </div>
 
     <div class="field">
+      <label>Repeat</label>
+      <select id="f-repeat">
+        <option value="none">None</option>
+        <option value="weekly">Weekly</option>
+        <option value="biweekly">Every 2 weeks</option>
+        <option value="monthly">Monthly</option>
+      </select>
+    </div>
+
+    <div class="field">
       <label>Notes</label>
       <textarea id="f-notes" placeholder="Car not available, bring health card..."></textarea>
     </div>
@@ -557,6 +576,23 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const USER_TOKEN = "him-token-abc123";
 const API_URL = "http://18.212.149.84:8000";
+
+const QUOTES = [
+  "A happy marriage is a long conversation which always seems too short. — Andre Marois",
+  "Love is composed of a single soul inhabiting two bodies. — Aristotle",
+  "The best portion of your life will be the small nameless moments you spend smiling with those who matter to you. — Capture the Atlas",
+  "Coming together is a beginning; staying together is progress; working together is success. — Snyder Contracting",
+  "Spending time with you is my favourite 'nothing' to do.",
+  "Time waits for no one, but love waits for the time you spend together.",
+  "Quality time is not just about the hours you spend together, but about the attention you give each other.",
+  "You're my favorite 'we.'",
+  "I would have really liked just doing laundry and taxes with you. — Everything Everywhere All At Once",
+  "Love is being stupid together. — Paul Valéry",
+  "Together, we're unstoppable."
+];
+
+// Set random quote on load
+document.getElementById('quote').textContent = QUOTES[Math.floor(Math.random() * QUOTES.length)];
 
 let cur = new Date();
 cur = new Date(cur.getFullYear(), cur.getMonth(), 1);
@@ -666,8 +702,21 @@ function renderCal() {
   const first = new Date(y, m, 1).getDay();
   const days  = new Date(y, m+1, 0).getDate();
   const todayStr = fmtDate(new Date());
+  
+  // Calculate max events on any day this month
+  let maxEvents = 0;
+  for (let d = 1; d <= days; d++) {
+    const ds = fmtDate(new Date(y, m, d));
+    const count = events.filter(e => e.date === ds).length;
+    if (count > maxEvents) maxEvents = count;
+  }
+  
+  // Set dynamic row height based on busiest day (30px per event + 28px base)
+  const minCellHeight = 28 + (maxEvents * 30);
+  const grid = document.getElementById('cal-grid');
+  grid.style.gridAutoRows = `minmax(${minCellHeight}px, auto)`;
+  
   let html = '';
-
   for (let i = 0; i < first; i++) {
     const d = new Date(y, m, -(first-1-i));
     html += buildCell(d, true, todayStr);
@@ -679,19 +728,18 @@ function renderCal() {
   for (let i = 1; i <= rem; i++) {
     html += buildCell(new Date(y, m+1, i), true, todayStr);
   }
-  document.getElementById('cal-grid').innerHTML = html;
+  grid.innerHTML = html;
 }
 
 function buildCell(d, other, todayStr) {
   const ds = fmtDate(d);
   const classes = ['cal-cell', other ? 'other' : '', ds === todayStr ? 'today' : '', ds === selectedDate ? 'selected' : ''].filter(Boolean).join(' ');
   const dayEvts = events.filter(e => e.date === ds).sort((a,b) => (a.time||'').localeCompare(b.time||''));
-  let pills = dayEvts.slice(0, 2).map(e => {
+  const pills = dayEvts.map(e => {
     const c = e.who === 'both' ? 'pill-both' : e.who === 'her' ? 'pill-her' : 'pill-him';
     const timeStr = fmtTimeRange(e.time, e.endTime);
     return `<div class="pill ${c}">${timeStr ? timeStr+' ' : ''}${e.title}</div>`;
   }).join('');
-  if (dayEvts.length > 2) pills += `<div class="pill-more">+${dayEvts.length-2}</div>`;
   return `<div class="${classes}" onclick="selectDay('${ds}')"><div class="day-num">${d.getDate()}</div>${pills}</div>`;
 }
 
@@ -736,10 +784,11 @@ function newEvent() {
   document.getElementById('f-title').value = '';
   document.getElementById('f-date').value = selectedDate;
   document.getElementById('f-hour').value = '';
-  document.getElementById('f-min').value = '';
+  document.getElementById('f-min').value = '00';
   document.getElementById('f-end-hour').value = '';
-  document.getElementById('f-end-min').value = '';
+  document.getElementById('f-end-min').value = '00';
   document.getElementById('f-place').value = '';
+  document.getElementById('f-repeat').value = 'none';
   document.getElementById('f-notes').value = '';
   document.getElementById('btn-delete').style.display = 'none';
   who = { him: true, her: false };
@@ -786,6 +835,8 @@ async function saveEvent() {
   const mi = document.getElementById('f-min').value;
   const eh = document.getElementById('f-end-hour').value;
   const emi = document.getElementById('f-end-min').value;
+  const repeat = document.getElementById('f-repeat').value;
+  
   const ev = {
     id:    editingId || Date.now(),
     title,
@@ -801,11 +852,65 @@ async function saveEvent() {
   if (editingId) {
     await updateEventToAPI(ev);
   } else {
+    // Create main event
     await saveEventToAPI(ev);
+    
+    // Generate recurring events if repeat is selected
+    if (repeat !== 'none') {
+      const occurrences = generateRecurringEvents(ev, repeat);
+      for (const occ of occurrences) {
+        await saveEventToAPI(occ);
+      }
+    }
   }
   
   await loadEventsFromAPI();
   clearForm();
+}
+
+function generateRecurringEvents(baseEvent, repeatType) {
+  const occurrences = [];
+  const startDate = new Date(baseEvent.date);
+  const endOfYear = new Date(startDate.getFullYear(), 11, 31); // Dec 31 of current year
+  
+  let currentDate = new Date(startDate);
+  
+  if (repeatType === 'weekly') {
+    // Add 7 days each time
+    currentDate.setDate(currentDate.getDate() + 7);
+    while (currentDate <= endOfYear) {
+      occurrences.push({
+        ...baseEvent,
+        id: Date.now() + occurrences.length,
+        date: fmtDate(currentDate)
+      });
+      currentDate.setDate(currentDate.getDate() + 7);
+    }
+  } else if (repeatType === 'biweekly') {
+    // Add 14 days each time
+    currentDate.setDate(currentDate.getDate() + 14);
+    while (currentDate <= endOfYear) {
+      occurrences.push({
+        ...baseEvent,
+        id: Date.now() + occurrences.length,
+        date: fmtDate(currentDate)
+      });
+      currentDate.setDate(currentDate.getDate() + 14);
+    }
+  } else if (repeatType === 'monthly') {
+    // Add 1 month each time
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    while (currentDate <= endOfYear) {
+      occurrences.push({
+        ...baseEvent,
+        id: Date.now() + occurrences.length,
+        date: fmtDate(currentDate)
+      });
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+  }
+  
+  return occurrences;
 }
 
 async function deleteEvent() {
