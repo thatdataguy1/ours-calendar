@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ours</title>
+<title>Ours - Her</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -329,6 +329,131 @@
     cursor: pointer;
   }
   .btn-delete:hover { background: #FDF0F3; }
+
+  /* Mobile Responsive Styles */
+  @media (max-width: 768px) {
+    body {
+      padding: 16px 12px;
+    }
+
+    .topbar {
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .title {
+      font-size: 24px;
+      width: 100%;
+    }
+
+    .top-right {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .btn-add {
+      padding: 10px 20px;
+      font-size: 14px;
+    }
+
+    .nav-btn {
+      width: 36px;
+      height: 36px;
+      font-size: 18px;
+    }
+
+    .month-pill {
+      font-size: 14px;
+      min-width: 120px;
+    }
+
+    /* Stack layout vertically on mobile */
+    .layout {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    /* Make calendar taller on mobile */
+    .cal-wrap {
+      min-height: 400px;
+    }
+
+    .cal-cell {
+      padding: 8px 4px;
+      min-height: 60px;
+    }
+
+    .day-num {
+      font-size: 13px;
+      width: 24px;
+      height: 24px;
+      margin-bottom: 4px;
+    }
+
+    .pill {
+      font-size: 10px;
+      padding: 3px 5px;
+      margin-bottom: 3px;
+    }
+
+    /* Panel comes after calendar on mobile */
+    .panel {
+      order: 2;
+    }
+
+    .panel-date {
+      font-size: 20px;
+    }
+
+    /* Bigger touch targets for mobile */
+    .field input,
+    .field textarea,
+    .field select {
+      font-size: 16px;
+      padding: 12px 14px;
+      -webkit-appearance: none;
+    }
+
+    .field textarea {
+      height: 80px;
+    }
+
+    .who-chip {
+      padding: 12px 0;
+      font-size: 14px;
+    }
+
+    .btn-save,
+    .btn-cancel,
+    .btn-delete {
+      padding: 12px;
+      font-size: 14px;
+    }
+
+    .ev-card {
+      padding: 12px 14px;
+      margin-bottom: 8px;
+    }
+
+    .ev-title {
+      font-size: 14px;
+      margin-bottom: 3px;
+    }
+
+    .ev-meta {
+      font-size: 11px;
+    }
+
+    /* Hide hover effects on mobile */
+    .cal-cell:hover {
+      background: transparent;
+    }
+
+    .nav-btn:hover {
+      background: none;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -388,6 +513,20 @@
     </div>
 
     <div class="field">
+      <label>End Time</label>
+      <div class="time-row">
+        <select id="f-end-hour"><option value="">Hour</option></select>
+        <select id="f-end-min">
+          <option value="">Min</option>
+          <option value="00">: 00</option>
+          <option value="15">: 15</option>
+          <option value="30">: 30</option>
+          <option value="45">: 45</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
       <label>Where</label>
       <input type="text" id="f-place" placeholder="Altitude gym, Sick Kids...">
     </div>
@@ -417,7 +556,7 @@
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const USER_TOKEN = "her-token-xyz789";
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "http://18.212.149.84:8000";
 
 let cur = new Date();
 cur = new Date(cur.getFullYear(), cur.getMonth(), 1);
@@ -435,6 +574,16 @@ for (let h = 0; h < 24; h++) {
   o.value = String(h).padStart(2, '0');
   o.textContent = label;
   hourSel.appendChild(o);
+}
+
+// Build end hour select
+const endHourSel = document.getElementById('f-end-hour');
+for (let h = 0; h < 24; h++) {
+  const label = h === 0 ? '12 AM' : h < 12 ? h + ' AM' : h === 12 ? '12 PM' : (h - 12) + ' PM';
+  const o = document.createElement('option');
+  o.value = String(h).padStart(2, '0');
+  o.textContent = label;
+  endHourSel.appendChild(o);
 }
 
 async function loadEventsFromAPI() {
@@ -492,6 +641,24 @@ function fmtTime(t) {
   return h + ':' + String(mm).padStart(2,'0') + (hh < 12 ? ' AM' : ' PM');
 }
 
+function fmtTimeRange(start, end) {
+  if (!start || !start.includes(':')) return '';
+  const [sh] = start.split(':').map(Number);
+  const sHour = sh === 0 ? 12 : sh > 12 ? sh - 12 : sh;
+  const sPeriod = sh < 12 ? 'AM' : 'PM';
+  
+  if (!end || !end.includes(':')) return sHour + ' ' + sPeriod;
+  
+  const [eh] = end.split(':').map(Number);
+  const eHour = eh === 0 ? 12 : eh > 12 ? eh - 12 : eh;
+  const ePeriod = eh < 12 ? 'AM' : 'PM';
+  
+  if (sPeriod === ePeriod) {
+    return sHour + '-' + eHour + ' ' + sPeriod;
+  }
+  return sHour + ' ' + sPeriod + '-' + eHour + ' ' + ePeriod;
+}
+
 function renderCal() {
   const y = cur.getFullYear(), m = cur.getMonth();
   document.getElementById('month-pill').textContent = MONTHS[m] + ' ' + y;
@@ -521,7 +688,8 @@ function buildCell(d, other, todayStr) {
   const dayEvts = events.filter(e => e.date === ds).sort((a,b) => (a.time||'').localeCompare(b.time||''));
   let pills = dayEvts.slice(0, 2).map(e => {
     const c = e.who === 'both' ? 'pill-both' : e.who === 'her' ? 'pill-her' : 'pill-him';
-    return `<div class="pill ${c}">${e.time ? e.time.slice(0,5)+' ' : ''}${e.title}</div>`;
+    const timeStr = fmtTimeRange(e.time, e.endTime);
+    return `<div class="pill ${c}">${timeStr ? timeStr+' ' : ''}${e.title}</div>`;
   }).join('');
   if (dayEvts.length > 2) pills += `<div class="pill-more">+${dayEvts.length-2}</div>`;
   return `<div class="${classes}" onclick="selectDay('${ds}')"><div class="day-num">${d.getDate()}</div>${pills}</div>`;
@@ -544,7 +712,12 @@ function renderPanel() {
   }
   el.innerHTML = dayEvts.map(e => {
     const c = e.who === 'both' ? 'both-card' : e.who === 'her' ? 'her-card' : 'him-card';
-    const meta = [e.time ? fmtTime(e.time) : '', e.place].filter(Boolean).join(' · ');
+    let timeStr = '';
+    if (e.time) {
+      timeStr = fmtTime(e.time);
+      if (e.endTime) timeStr += ' - ' + fmtTime(e.endTime);
+    }
+    const meta = [timeStr, e.place].filter(Boolean).join(' · ');
     return `<div class="ev-card ${c}" onclick="editEvent(${e.id})">
       <div class="ev-title">${e.title}</div>
       ${meta ? `<div class="ev-meta">${meta}</div>` : ''}
@@ -564,6 +737,8 @@ function newEvent() {
   document.getElementById('f-date').value = selectedDate;
   document.getElementById('f-hour').value = '';
   document.getElementById('f-min').value = '';
+  document.getElementById('f-end-hour').value = '';
+  document.getElementById('f-end-min').value = '';
   document.getElementById('f-place').value = '';
   document.getElementById('f-notes').value = '';
   document.getElementById('btn-delete').style.display = 'none';
@@ -583,6 +758,9 @@ function editEvent(id) {
   const parts = (e.time || '').split(':');
   document.getElementById('f-hour').value = parts[0] || '';
   document.getElementById('f-min').value  = parts[1] || '';
+  const endParts = (e.endTime || '').split(':');
+  document.getElementById('f-end-hour').value = endParts[0] || '';
+  document.getElementById('f-end-min').value  = endParts[1] || '';
   document.getElementById('f-place').value = e.place || '';
   document.getElementById('f-notes').value = e.notes || '';
   document.getElementById('btn-delete').style.display = 'inline-block';
@@ -606,15 +784,18 @@ async function saveEvent() {
   if (!title) { document.getElementById('f-title').focus(); return; }
   const h  = document.getElementById('f-hour').value;
   const mi = document.getElementById('f-min').value;
+  const eh = document.getElementById('f-end-hour').value;
+  const emi = document.getElementById('f-end-min').value;
   const ev = {
     id:    editingId || Date.now(),
     title,
     date:  document.getElementById('f-date').value,
     time:  (h && mi) ? h + ':' + mi : '',
+    endTime: (eh && emi) ? eh + ':' + emi : '',
     place: document.getElementById('f-place').value.trim(),
     notes: document.getElementById('f-notes').value.trim(),
     who:   (who.him && who.her) ? 'both' : who.her ? 'her' : 'him',
-    author: 'him'
+    author: 'her'
   };
   
   if (editingId) {

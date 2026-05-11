@@ -29,6 +29,7 @@ class Event(BaseModel):
     title: str
     date: str
     time: Optional[str] = ""
+    endTime: Optional[str] = ""
     place: Optional[str] = ""
     notes: Optional[str] = ""
     who: str
